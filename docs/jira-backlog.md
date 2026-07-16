@@ -328,6 +328,7 @@ Set up provider configuration and version constraints in both environment root m
 ### PETPLAT-6: Create VPC module — VPC, subnets, IGW
 
 **Type:** Story
+**Status:** Done
 **Priority:** P0
 **Epic:** E-2 Networking
 **Story Points:** 5
@@ -346,17 +347,17 @@ Create a reusable VPC module in `terraform/modules/vpc/` that provisions:
 - Security groups are the primary access control mechanism
 
 **Acceptance Criteria:**
-- [ ] Module in `terraform/modules/vpc/` with main.tf, variables.tf, outputs.tf
-- [ ] VPC created with DNS support and DNS hostnames enabled
-- [ ] 2 public subnets with `map_public_ip_on_launch = true`
-- [ ] Subnets spread across 2 AZs
-- [ ] Internet Gateway attached
-- [ ] Route table: 0.0.0.0/0 → IGW
-- [ ] No NAT Gateway (intentional — cost saving for students)
-- [ ] Subnets tagged for EKS: `kubernetes.io/cluster/petclinic-{env}` = shared, `kubernetes.io/role/elb` = 1
-- [ ] All resources tagged with Project, Environment, ManagedBy
-- [ ] Outputs: vpc_id, subnet_ids
-- [ ] `terraform validate` passes
+- [x] Module in `terraform/modules/vpc/` with main.tf, variables.tf, outputs.tf
+- [x] VPC created with DNS support and DNS hostnames enabled
+- [x] 2 public subnets with `map_public_ip_on_launch = true`
+- [x] Subnets spread across 2 AZs
+- [x] Internet Gateway attached
+- [x] Route table: 0.0.0.0/0 → IGW
+- [x] No NAT Gateway (intentional — cost saving for students)
+- [x] Subnets tagged for EKS: `kubernetes.io/cluster/petclinic-{env}` = shared, `kubernetes.io/role/elb` = 1
+- [x] All resources tagged with Project, Environment, ManagedBy
+- [x] Outputs: vpc_id, subnet_ids
+- [x] `terraform validate` passes
 
 ---
 
@@ -369,6 +370,7 @@ _VPC endpoints were needed to avoid NAT Gateway costs for private subnets. With 
 ### PETPLAT-8: Create baseline security groups
 
 **Type:** Story
+**Status:** Done
 **Priority:** P0
 **Epic:** E-2 Networking
 **Story Points:** 3
@@ -387,20 +389,21 @@ Create baseline security groups within the VPC module or as a separate section:
 Security groups are the **primary access control boundary** in this all-public subnet design. They must be as restrictive as a traditional private subnet setup.
 
 **Acceptance Criteria:**
-- [ ] EKS cluster SG: allows 443 from node SG
-- [ ] EKS node SG: allows all traffic from cluster SG, allows all traffic from other nodes (self-reference)
-- [ ] RDS SG: allows 3306 from EKS node SG only (NOT 0.0.0.0/0)
-- [ ] ALB SG: allows 80 and 443 from 0.0.0.0/0 (public-facing)
-- [ ] All SGs have descriptive names and tags
-- [ ] No overly permissive rules — SGs are the perimeter, treat them like firewall rules
-- [ ] Outputs: all security group IDs
-- [ ] `terraform validate` passes
+- [x] EKS cluster SG: allows 443 from node SG
+- [x] EKS node SG: allows all traffic from cluster SG, allows all traffic from other nodes (self-reference)
+- [x] RDS SG: allows 3306 from EKS node SG only (NOT 0.0.0.0/0)
+- [x] ALB SG: allows 80 and 443 from 0.0.0.0/0 (public-facing)
+- [x] All SGs have descriptive names and tags
+- [x] No overly permissive rules — SGs are the perimeter, treat them like firewall rules
+- [x] Outputs: all security group IDs
+- [x] `terraform validate` passes
 
 ---
 
 ### PETPLAT-9: Wire VPC module into dev environment
 
 **Type:** Task
+**Status:** In Review — code complete and `terraform plan` verified against real AWS; `terraform apply` not yet run (pending explicit go-ahead)
 **Priority:** P0
 **Epic:** E-2 Networking
 **Story Points:** 2
@@ -413,16 +416,17 @@ Call the VPC module from `terraform/environments/dev/main.tf` with dev-appropria
 **Technical Spec:** [VPC Network Design](./technical-spec.md#vpc-network-design)
 
 **Acceptance Criteria:**
-- [ ] VPC module called in dev main.tf
-- [ ] VPC CIDR: 10.0.0.0/16
-- [ ] `terraform plan` shows expected resources (VPC, 2 subnets, IGW, route table, SGs)
-- [ ] `terraform apply` succeeds and creates the VPC
+- [x] VPC module called in dev main.tf
+- [x] VPC CIDR: 10.0.0.0/16
+- [x] `terraform plan` shows expected resources (VPC, 2 subnets, IGW, route table, SGs) — verified: 22 to add, 0 to change, 0 to destroy
+- [ ] `terraform apply` succeeds and creates the VPC — not yet run
 
 ---
 
 ### PETPLAT-10: Wire VPC module into prod environment
 
 **Type:** Task
+**Status:** Done
 **Priority:** P1
 **Epic:** E-2 Networking
 **Story Points:** 1
@@ -435,9 +439,9 @@ Call the VPC module from `terraform/environments/prod/main.tf` with prod-appropr
 **Technical Spec:** [VPC Network Design](./technical-spec.md#vpc-network-design)
 
 **Acceptance Criteria:**
-- [ ] VPC module called in prod main.tf
-- [ ] VPC CIDR: 10.1.0.0/16 (non-overlapping with dev)
-- [ ] `terraform plan` shows expected resources
+- [x] VPC module called in prod main.tf
+- [x] VPC CIDR: 10.1.0.0/16 (non-overlapping with dev)
+- [x] `terraform plan` shows expected resources — verified: 22 to add, 0 to change, 0 to destroy
 
 ---
 
