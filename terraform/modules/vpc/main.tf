@@ -141,8 +141,6 @@ resource "aws_vpc_security_group_ingress_rule" "node_from_cluster_all" {
   description                  = "All traffic from EKS cluster SG"
   referenced_security_group_id = aws_security_group.eks_cluster.id
   ip_protocol                  = "-1"
-  from_port                    = 0
-  to_port                      = 0
 
   tags = merge(local.tags, { Name = "${local.name_prefix}-eks-node-from-cluster-all" })
 }
@@ -152,8 +150,6 @@ resource "aws_vpc_security_group_ingress_rule" "node_self" {
   description                  = "Inter-node communication"
   referenced_security_group_id = aws_security_group.eks_node.id
   ip_protocol                  = "-1"
-  from_port                    = 0
-  to_port                      = 0
 
   tags = merge(local.tags, { Name = "${local.name_prefix}-eks-node-self" })
 }

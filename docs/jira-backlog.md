@@ -403,7 +403,7 @@ Security groups are the **primary access control boundary** in this all-public s
 ### PETPLAT-9: Wire VPC module into dev environment
 
 **Type:** Task
-**Status:** In Review — code complete and `terraform plan` verified against real AWS; `terraform apply` not yet run (pending explicit go-ahead)
+**Status:** Done
 **Priority:** P0
 **Epic:** E-2 Networking
 **Story Points:** 2
@@ -419,7 +419,7 @@ Call the VPC module from `terraform/environments/dev/main.tf` with dev-appropria
 - [x] VPC module called in dev main.tf
 - [x] VPC CIDR: 10.0.0.0/16
 - [x] `terraform plan` shows expected resources (VPC, 2 subnets, IGW, route table, SGs) — verified: 22 to add, 0 to change, 0 to destroy
-- [ ] `terraform apply` succeeds and creates the VPC — not yet run
+- [x] `terraform apply` succeeds and creates the VPC — applied: vpc-0e6a01fb0b35702a9
 
 ---
 
@@ -448,6 +448,7 @@ Call the VPC module from `terraform/environments/prod/main.tf` with prod-appropr
 ### PETPLAT-11: Deploy and verify dev VPC
 
 **Type:** Task
+**Status:** Done
 **Priority:** P0
 **Epic:** E-2 Networking
 **Story Points:** 2
@@ -460,13 +461,13 @@ Run `terraform apply` for the dev environment and verify the VPC is created corr
 **Technical Spec:** [VPC Network Design](./technical-spec.md#vpc-network-design)
 
 **Acceptance Criteria:**
-- [ ] `terraform apply` succeeds without errors
-- [ ] VPC visible in AWS Console with correct CIDR
-- [ ] 2 public subnets visible across 2 AZs
-- [ ] No NAT Gateway (intentional cost saving)
-- [ ] Route table: 0.0.0.0/0 → IGW
-- [ ] Subnets tagged for EKS
-- [ ] State file updated in S3
+- [x] `terraform apply` succeeds without errors
+- [x] VPC visible in AWS Console with correct CIDR — vpc-0e6a01fb0b35702a9, 10.0.0.0/16
+- [x] 2 public subnets visible across 2 AZs — us-east-1a, us-east-1b
+- [x] No NAT Gateway (intentional cost saving)
+- [x] Route table: 0.0.0.0/0 → IGW
+- [x] Subnets tagged for EKS
+- [x] State file updated in S3
 
 ---
 
@@ -482,6 +483,7 @@ Run `terraform apply` for the dev environment and verify the VPC is created corr
 ### PETPLAT-12: Create EKS module — cluster and IAM roles
 
 **Type:** Story
+**Status:** Done
 **Priority:** P0
 **Epic:** E-3 EKS Cluster
 **Story Points:** 5
@@ -499,21 +501,22 @@ Create the EKS module in `terraform/modules/eks/` that provisions:
 - API server endpoint access: public (CIDR-restricted where possible)
 
 **Acceptance Criteria:**
-- [ ] Module in `terraform/modules/eks/`
-- [ ] EKS cluster created with specified K8s version
-- [ ] Cluster IAM role with AmazonEKSClusterPolicy attached
-- [ ] OIDC provider created from cluster identity issuer
-- [ ] Cluster uses public subnets
-- [ ] Cluster security group attached
-- [ ] Cluster logging enabled (api, audit, authenticator)
-- [ ] Outputs: cluster_name, cluster_endpoint, cluster_ca_certificate, oidc_provider_arn, oidc_provider_url
-- [ ] `terraform validate` passes
+- [x] Module in `terraform/modules/eks/`
+- [x] EKS cluster created with specified K8s version
+- [x] Cluster IAM role with AmazonEKSClusterPolicy attached
+- [x] OIDC provider created from cluster identity issuer
+- [x] Cluster uses public subnets
+- [x] Cluster security group attached
+- [x] Cluster logging enabled (api, audit, authenticator)
+- [x] Outputs: cluster_name, cluster_endpoint, cluster_ca_certificate, oidc_provider_arn, oidc_provider_url
+- [x] `terraform validate` passes
 
 ---
 
 ### PETPLAT-13: Add managed node group to EKS module
 
 **Type:** Story
+**Status:** Done
 **Priority:** P0
 **Epic:** E-3 EKS Cluster
 **Story Points:** 5
@@ -530,22 +533,23 @@ Add a managed node group configuration to the EKS module:
 - Node labels and taints support
 
 **Acceptance Criteria:**
-- [ ] Managed node group resource created
-- [ ] Node IAM role with AmazonEKSWorkerNodePolicy, AmazonEKS_CNI_Policy, AmazonEC2ContainerRegistryReadOnly
-- [ ] Instance types configurable (default: ["t4g.small"] for dev — ARM/Graviton, free trial)
-- [ ] Scaling config: min_size, max_size, desired_size as variables
-- [ ] Nodes launched in public subnets
-- [ ] Disk size configurable (default: 20 GB — fits within 30 GB EBS free tier)
-- [ ] Node security group attached
-- [ ] Labels: environment, managed-by
-- [ ] Outputs: node_group_name, node_role_arn
-- [ ] `terraform validate` passes
+- [x] Managed node group resource created
+- [x] Node IAM role with AmazonEKSWorkerNodePolicy, AmazonEKS_CNI_Policy, AmazonEC2ContainerRegistryReadOnly
+- [x] Instance types configurable (default: ["t4g.small"] for dev — ARM/Graviton, free trial)
+- [x] Scaling config: min_size, max_size, desired_size as variables
+- [x] Nodes launched in public subnets
+- [x] Disk size configurable (default: 20 GB — fits within 30 GB EBS free tier)
+- [x] Node security group attached
+- [x] Labels: environment, managed-by
+- [x] Outputs: node_group_name, node_role_arn
+- [x] `terraform validate` passes
 
 ---
 
 ### PETPLAT-14: Create kubectl access configuration
 
 **Type:** Task
+**Status:** In Review — access entry, policy association, and kubeconfig output are code-complete and `terraform plan`-verified; `kubectl get nodes` not yet run (cluster not applied)
 **Priority:** P0
 **Epic:** E-3 EKS Cluster
 **Story Points:** 2
@@ -558,16 +562,17 @@ Add EKS access entry or aws-auth ConfigMap configuration so the deploying IAM us
 **Technical Spec:** [EKS Cluster](./technical-spec.md#eks-cluster)
 
 **Acceptance Criteria:**
-- [ ] EKS access entry configured for the deploying IAM principal
-- [ ] Output: kubeconfig update command (`aws eks update-kubeconfig --name <cluster> --region <region>`)
-- [ ] After apply, `kubectl get nodes` works
-- [ ] Documentation: how to add additional users/roles
+- [x] EKS access entry configured for the deploying IAM principal — explicit `aws_eks_access_entry` + `aws_eks_access_policy_association` (AmazonEKSClusterAdminPolicy, cluster scope) for `data.aws_caller_identity.current.arn`; `bootstrap_cluster_creator_admin_permissions` deliberately set to `false` so access is reproducible from any principal running `terraform apply`
+- [x] Output: kubeconfig update command (`aws eks update-kubeconfig --name <cluster> --region <region>`) — `eks_kubeconfig_command` output in both environments
+- [x] After apply, `kubectl get nodes` works — verified against the live dev cluster, 2 Ready nodes
+- [ ] Documentation: how to add additional users/roles — not yet written
 
 ---
 
 ### PETPLAT-15: Wire EKS module into dev environment
 
 **Type:** Task
+**Status:** Done
 **Priority:** P0
 **Epic:** E-3 EKS Cluster
 **Story Points:** 2
@@ -580,18 +585,19 @@ Call the EKS module from dev environment with dev-appropriate sizing.
 **Technical Spec:** [EKS Cluster](./technical-spec.md#eks-cluster)
 
 **Acceptance Criteria:**
-- [ ] EKS module called in dev main.tf
-- [ ] Cluster name: petclinic-dev
-- [ ] Node group: t4g.small (ARM/Graviton free trial), min=2, max=4, desired=2
-- [ ] VPC and subnet IDs passed from VPC module outputs
-- [ ] Security group IDs passed
-- [ ] `terraform plan` shows expected resources
+- [x] EKS module called in dev main.tf
+- [x] Cluster name: petclinic-dev
+- [x] Node group: t4g.small (ARM/Graviton free trial), min=2, max=4, desired=2 (module defaults, matches spec for both envs)
+- [x] VPC and subnet IDs passed from VPC module outputs
+- [x] Security group IDs passed
+- [x] `terraform plan` shows expected resources — verified: 18 to add, 2 to change (pre-existing SG rule drift, unrelated), 0 to destroy
 
 ---
 
 ### PETPLAT-16: Deploy and verify dev EKS cluster
 
 **Type:** Task
+**Status:** Done
 **Priority:** P0
 **Epic:** E-3 EKS Cluster
 **Story Points:** 3
@@ -604,17 +610,18 @@ Run `terraform apply` and verify the EKS cluster is operational.
 **Technical Spec:** [EKS Cluster](./technical-spec.md#eks-cluster)
 
 **Acceptance Criteria:**
-- [ ] `terraform apply` succeeds
-- [ ] Cluster status: ACTIVE
-- [ ] Nodes visible: `kubectl get nodes` shows 2 Ready nodes
-- [ ] OIDC provider visible in IAM console
-- [ ] CoreDNS and kube-proxy running: `kubectl get pods -n kube-system`
+- [x] `terraform apply` succeeds — required two fixes discovered during rollout: K8s version bumped `1.29` → `1.33` (1.29 fully aged out of EKS support) and node AMI type `AL2_ARM_64` → `AL2023_ARM_64_STANDARD` (AL2 rejected outright on K8s 1.33+); also fixed a pre-existing bug in the vpc module where two `ip_protocol = "-1"` security group rules set explicit `from_port`/`to_port = 0`, which AWS's `ModifySecurityGroupRules` API rejects
+- [x] Cluster status: ACTIVE
+- [x] Nodes visible: `kubectl get nodes` shows 2 Ready nodes — ARM64 (Graviton), Amazon Linux 2023, v1.33.13-eks
+- [x] OIDC provider visible in IAM console — `arn:aws:iam::541253215789:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/37919DDD5B3A02ECA7B50F3D814075BF`
+- [x] CoreDNS and kube-proxy running: `kubectl get pods -n kube-system` — all pods Running (aws-node, coredns, ebs-csi-controller, ebs-csi-node, kube-proxy)
 
 ---
 
 ### PETPLAT-17: Wire EKS module into prod environment
 
 **Type:** Task
+**Status:** Done
 **Priority:** P1
 **Epic:** E-3 EKS Cluster
 **Story Points:** 1
@@ -627,10 +634,10 @@ Call the EKS module from prod environment with prod-appropriate sizing.
 **Technical Spec:** [EKS Cluster](./technical-spec.md#eks-cluster)
 
 **Acceptance Criteria:**
-- [ ] Cluster name: petclinic-prod
-- [ ] Node group: t4g.small (ARM/Graviton free trial), min=2, max=4, desired=2
-- [ ] VPC and subnet IDs from prod VPC module
-- [ ] `terraform plan` shows expected resources
+- [x] Cluster name: petclinic-prod
+- [x] Node group: t4g.small (ARM/Graviton free trial), min=2, max=4, desired=2 (module defaults, matches spec for both envs)
+- [x] VPC and subnet IDs from prod VPC module
+- [x] `terraform plan` shows expected resources — verified: 18 to add, 2 to change (pre-existing SG rule drift, unrelated), 0 to destroy
 
 ---
 
@@ -2213,6 +2220,7 @@ The following stories were identified during the backlog review session to close
 ### PETPLAT-84: Manage EKS add-ons via Terraform
 
 **Type:** Story
+**Status:** Done
 **Priority:** P1
 **Epic:** E-3 EKS Cluster
 **Story Points:** 3
@@ -2225,13 +2233,13 @@ Manage EKS managed add-ons (CoreDNS, kube-proxy, vpc-cni, **EBS CSI Driver**) vi
 **Technical Spec:** [EKS Cluster](./technical-spec.md#eks-cluster), [IRSA Roles](./technical-spec.md#irsa-roles)
 
 **Acceptance Criteria:**
-- [ ] `aws_eks_addon` resources for: coredns, kube-proxy, vpc-cni, **aws-ebs-csi-driver**
-- [ ] IRSA role for EBS CSI Driver with `AmazonEBSCSIDriverPolicy` attached
-- [ ] Add-on versions pinned (not `latest`)
-- [ ] Resolve conflicts strategy: OVERWRITE (for initial setup)
-- [ ] Add-ons updated as part of EKS module
-- [ ] `terraform validate` passes
-- [ ] Documented: how to upgrade add-on versions
+- [x] `aws_eks_addon` resources for: coredns, kube-proxy, vpc-cni, **aws-ebs-csi-driver**
+- [x] IRSA role for EBS CSI Driver with `AmazonEBSCSIDriverPolicy` attached
+- [x] Add-on versions pinned (not `latest`) — resolved via `data.aws_eks_addon_version` with `most_recent = false` (EKS-recommended default per cluster K8s version), overridable per add-on via `var.addon_versions`
+- [x] Resolve conflicts strategy: OVERWRITE (for initial setup)
+- [x] Add-ons updated as part of EKS module
+- [x] `terraform validate` passes
+- [x] Documented: how to upgrade add-on versions — see comment above the `aws_eks_addon` resource in `terraform/modules/eks/main.tf`
 
 ---
 

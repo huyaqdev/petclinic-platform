@@ -29,3 +29,54 @@ output "alb_sg_id" {
   description = "ALB security group ID"
   value       = module.vpc.alb_sg_id
 }
+
+output "eks_cluster_name" {
+  description = "EKS cluster name"
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS API server endpoint"
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_ca_certificate" {
+  description = "EKS cluster CA certificate (base64)"
+  value       = module.eks.cluster_ca_certificate
+  sensitive   = true
+}
+
+output "eks_cluster_security_group_id" {
+  description = "EKS cluster auto-created security group (control-plane-to-data-plane)"
+  value       = module.eks.cluster_security_group_id
+}
+
+output "eks_ebs_csi_role_arn" {
+  description = "IRSA role ARN for the EBS CSI Driver add-on"
+  value       = module.eks.ebs_csi_role_arn
+}
+
+output "eks_oidc_provider_arn" {
+  description = "OIDC provider ARN (for IRSA trust policies)"
+  value       = module.eks.oidc_provider_arn
+}
+
+output "eks_oidc_provider_url" {
+  description = "OIDC provider issuer URL (for IRSA trust policies)"
+  value       = module.eks.oidc_provider_url
+}
+
+output "eks_node_group_name" {
+  description = "Managed node group name"
+  value       = module.eks.node_group_name
+}
+
+output "eks_node_role_arn" {
+  description = "Node IAM role ARN"
+  value       = module.eks.node_role_arn
+}
+
+output "eks_kubeconfig_command" {
+  description = "Command to configure kubectl for this cluster"
+  value       = "aws eks update-kubeconfig --name ${module.eks.cluster_name} --region ${var.aws_region}"
+}

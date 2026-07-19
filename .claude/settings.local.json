@@ -7,7 +7,21 @@
     "allow": [
       "Bash(git init *)",
       "Bash(git checkout *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(docker info *)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Read(//tmp/**)",
+      "Bash(docker --version)",
+      "Bash(where docker *)",
+      "Bash(timeout 15 docker run -i --rm hashicorp/terraform-mcp-server stdio)",
+      "Bash(echo \"EXIT=$?\")",
+      "mcp__atlassian__transitionJiraIssue",
+      "mcp__atlassian__searchJiraIssuesUsingJql",
+      "mcp__terraform-mcp-server__search_providers",
+      "mcp__terraform-mcp-server__get_provider_details",
+      "mcp__aws-knowledge-mcp__aws___search_documentation",
+      "Bash(terraform validate *)",
+      "Bash(terraform plan *)"
     ]
   },
   "enabledMcpjsonServers": [
