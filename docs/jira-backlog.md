@@ -820,7 +820,7 @@ Store the RDS master credentials in AWS Secrets Manager via Terraform. Generate 
 ### PETPLAT-24: Create database initialization strategy
 
 **Type:** Story
-**Status:** Done — strategy documented; "tested: services can connect" deferred to PETPLAT-26 (requires a deployed RDS instance and running services)
+**Status:** Done — strategy documented; RDS-level connectivity proven in PETPLAT-26 (debug pod → RDS, correct credentials, `petclinic` database visible). Full "services can connect and tables exist" still awaits the actual microservices being deployed to K8s (E-8/E-16/E-17) so Spring Boot can run its schema auto-init.
 **Priority:** P0
 **Epic:** E-5 Database
 **Story Points:** 3
@@ -870,6 +870,7 @@ Call the RDS module from dev environment.
 ### PETPLAT-26: Deploy and verify dev RDS
 
 **Type:** Task
+**Status:** Done
 **Priority:** P0
 **Epic:** E-5 Database
 **Story Points:** 2
@@ -882,11 +883,11 @@ Deploy RDS to dev and verify connectivity from EKS pod.
 **Technical Spec:** [RDS Database](./technical-spec.md#rds-database)
 
 **Acceptance Criteria:**
-- [ ] `terraform apply` succeeds
-- [ ] RDS instance status: available
-- [ ] Endpoint accessible from EKS node (test via debug pod: `kubectl run`)
-- [ ] Can connect with credentials from Secrets Manager
-- [ ] Secrets stored correctly in Secrets Manager (`petclinic/{env}/rds-credentials`)
+- [x] `terraform apply` succeeds — 6 added, 0 changed, 0 destroyed
+- [x] RDS instance status: available — `petclinic-dev-mysql`, confirmed via `aws rds describe-db-instances`
+- [x] Endpoint accessible from EKS node (test via debug pod: `kubectl run`) — debug pod `rds-connectivity-test` (mysql:8.0 client image) scheduled on an EKS node, connected to `petclinic-dev-mysql...rds.amazonaws.com:3306`
+- [x] Can connect with credentials from Secrets Manager — pulled `petclinic/dev/rds-credentials`, injected into the pod via a transient K8s Secret (`username`/`password` env vars), `mysql -h ... -u ...` succeeded, `SELECT VERSION()` returned `8.0.46`
+- [x] Secrets stored correctly in Secrets Manager (`petclinic/{env}/rds-credentials`) — verified `username`/`password` keys present and correct length; `petclinic` database visible via `SHOW DATABASES` (no tables yet — created on first service startup per PETPLAT-24). Debug pod and transient K8s Secret deleted after the test; no credentials left resident in the cluster.
 
 ---
 
