@@ -80,3 +80,18 @@ output "eks_kubeconfig_command" {
   description = "Command to configure kubectl for this cluster"
   value       = "aws eks update-kubeconfig --name ${module.eks.cluster_name} --region ${var.aws_region}"
 }
+
+output "ecr_repository_urls" {
+  description = "Map of service_name → ECR repository URL"
+  value       = module.ecr.repository_urls
+}
+
+output "ecr_repository_arns" {
+  description = "Map of service_name → ECR repository ARN"
+  value       = module.ecr.repository_arns
+}
+
+output "ecr_image_tag_mutability" {
+  description = "Tag mutability applied to all prod ECR repositories"
+  value       = module.ecr.image_tag_mutability
+}

@@ -33,3 +33,15 @@ variable "availability_zones" {
   type        = list(string)
   default     = ["us-east-1a", "us-east-1b"]
 }
+
+variable "ecr_service_names" {
+  description = "Service names to create ECR repositories for"
+  type        = list(string)
+  default     = ["config-server", "discovery-server", "api-gateway", "customers-service", "visits-service", "vets-service", "genai-service", "admin-server"]
+}
+
+variable "ecr_image_tag_mutability" {
+  description = "Tag mutability for dev ECR repositories"
+  type        = string
+  default     = "MUTABLE"
+}

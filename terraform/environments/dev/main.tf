@@ -20,3 +20,13 @@ module "eks" {
   cluster_sg_id = module.vpc.eks_cluster_sg_id
   node_sg_id    = module.vpc.eks_node_sg_id
 }
+
+module "ecr" {
+  source = "../../modules/ecr"
+
+  project     = var.project
+  environment = var.environment
+
+  service_names        = var.ecr_service_names
+  image_tag_mutability = var.ecr_image_tag_mutability
+}

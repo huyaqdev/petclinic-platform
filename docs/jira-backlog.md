@@ -549,7 +549,7 @@ Add a managed node group configuration to the EKS module:
 ### PETPLAT-14: Create kubectl access configuration
 
 **Type:** Task
-**Status:** In Review — access entry, policy association, and kubeconfig output are code-complete and `terraform plan`-verified; `kubectl get nodes` not yet run (cluster not applied)
+**Status:** Done
 **Priority:** P0
 **Epic:** E-3 EKS Cluster
 **Story Points:** 2
@@ -565,7 +565,7 @@ Add EKS access entry or aws-auth ConfigMap configuration so the deploying IAM us
 - [x] EKS access entry configured for the deploying IAM principal — explicit `aws_eks_access_entry` + `aws_eks_access_policy_association` (AmazonEKSClusterAdminPolicy, cluster scope) for `data.aws_caller_identity.current.arn`; `bootstrap_cluster_creator_admin_permissions` deliberately set to `false` so access is reproducible from any principal running `terraform apply`
 - [x] Output: kubeconfig update command (`aws eks update-kubeconfig --name <cluster> --region <region>`) — `eks_kubeconfig_command` output in both environments
 - [x] After apply, `kubectl get nodes` works — verified against the live dev cluster, 2 Ready nodes
-- [ ] Documentation: how to add additional users/roles — not yet written
+- [x] Documentation: how to add additional users/roles — `docs/runbook.md`, "Grant an additional IAM user/role access to an EKS cluster"
 
 ---
 
@@ -653,6 +653,7 @@ Call the EKS module from prod environment with prod-appropriate sizing.
 ### PETPLAT-18: Create ECR module
 
 **Type:** Story
+**Status:** Done
 **Priority:** P0
 **Epic:** E-4 Container Registry (ECR)
 **Story Points:** 3
@@ -665,21 +666,22 @@ Create the ECR module in `terraform/modules/ecr/` that provisions one ECR privat
 **Technical Spec:** [ECR Container Registry](./technical-spec.md#ecr-container-registry), [Terraform Modules](./technical-spec.md#terraform-modules)
 
 **Acceptance Criteria:**
-- [ ] Module in `terraform/modules/ecr/`
-- [ ] Uses `aws_ecr_repository` resource
-- [ ] Accepts `service_names` list variable and `environment` variable
-- [ ] Creates one ECR repo per service name under `petclinic-{env}/` namespace
-- [ ] Scan-on-push enabled (`image_scanning_configuration`)
-- [ ] Tag mutability configurable (MUTABLE for dev, IMMUTABLE for prod)
-- [ ] Lifecycle policy: keep last 10 images, expire untagged after 7 days
-- [ ] Outputs: map of service_name → repository_url, map of service_name → repository_arn
-- [ ] `terraform validate` passes
+- [x] Module in `terraform/modules/ecr/`
+- [x] Uses `aws_ecr_repository` resource
+- [x] Accepts `service_names` list variable and `environment` variable
+- [x] Creates one ECR repo per service name under `petclinic-{env}/` namespace
+- [x] Scan-on-push enabled (`image_scanning_configuration`)
+- [x] Tag mutability configurable (MUTABLE for dev, IMMUTABLE for prod)
+- [x] Lifecycle policy: keep last 10 images, expire untagged after 7 days
+- [x] Outputs: map of service_name → repository_url, map of service_name → repository_arn
+- [x] `terraform validate` passes
 
 ---
 
 ### PETPLAT-19: Add lifecycle policy and tag immutability configuration
 
 **Type:** Task
+**Status:** In Review — implemented and `terraform plan`-verified; pruning behavior can't be exercised until real repos exist with real images over time
 **Priority:** P1
 **Epic:** E-4 Container Registry (ECR)
 **Story Points:** 2
@@ -692,17 +694,18 @@ Configure ECR lifecycle policies to automatically clean up old images and manage
 **Technical Spec:** [ECR Container Registry](./technical-spec.md#ecr-container-registry)
 
 **Acceptance Criteria:**
-- [ ] Lifecycle policy JSON: keep last 10 tagged images, expire untagged after 7 days
-- [ ] `aws_ecr_lifecycle_policy` resource attached to each repository
-- [ ] Tag immutability: `MUTABLE` for dev, `IMMUTABLE` for prod (variable-driven)
-- [ ] Lifecycle policy tested: verify old images are pruned after threshold
-- [ ] `terraform validate` passes
+- [x] Lifecycle policy JSON: keep last 10 tagged images, expire untagged after 7 days
+- [x] `aws_ecr_lifecycle_policy` resource attached to each repository
+- [x] Tag immutability: `MUTABLE` for dev, `IMMUTABLE` for prod (variable-driven) — verified via plan: dev shows `MUTABLE`, prod shows `IMMUTABLE`
+- [ ] Lifecycle policy tested: verify old images are pruned after threshold — requires real repos + real image pushes over time, not yet run
+- [x] `terraform validate` passes
 
 ---
 
 ### PETPLAT-20: Wire ECR module into dev environment and deploy
 
 **Type:** Task
+**Status:** Done
 **Priority:** P0
 **Epic:** E-4 Container Registry (ECR)
 **Story Points:** 2
@@ -715,17 +718,18 @@ Call the ECR module from dev environment with all 8 service names and deploy. EC
 **Technical Spec:** [ECR Container Registry](./technical-spec.md#ecr-container-registry)
 
 **Acceptance Criteria:**
-- [ ] ECR module called with service_names: [config-server, discovery-server, api-gateway, customers-service, visits-service, vets-service, genai-service, admin-server]
-- [ ] `terraform apply` succeeds
-- [ ] 8 ECR repositories visible in us-east-1 under `petclinic-dev/` prefix
-- [ ] Repository URIs accessible and correct
-- [ ] Scan-on-push enabled on all repos
+- [x] ECR module called with service_names: [config-server, discovery-server, api-gateway, customers-service, visits-service, vets-service, genai-service, admin-server]
+- [x] `terraform apply` succeeds — 16 added, 0 changed, 0 destroyed
+- [x] 8 ECR repositories visible in us-east-1 under `petclinic-dev/` prefix — verified via `aws ecr describe-repositories`
+- [x] Repository URIs accessible and correct — e.g. `541253215789.dkr.ecr.us-east-1.amazonaws.com/petclinic-dev/config-server`
+- [x] Scan-on-push enabled on all repos — confirmed `scanOnPush: True` on all 8 via AWS CLI
 
 ---
 
 ### PETPLAT-21: Create ECR login helper script
 
 **Type:** Task
+**Status:** Done
 **Priority:** P2
 **Epic:** E-4 Container Registry (ECR)
 **Story Points:** 1
@@ -738,10 +742,10 @@ Create `scripts/ecr-login.sh` that authenticates Docker to the ECR private regis
 **Technical Spec:** [ECR Container Registry](./technical-spec.md#ecr-container-registry)
 
 **Acceptance Criteria:**
-- [ ] Script at `scripts/ecr-login.sh`
-- [ ] Uses `aws ecr get-login-password --region us-east-1` and pipes to `docker login {account}.dkr.ecr.us-east-1.amazonaws.com`
-- [ ] Works on macOS and Linux
-- [ ] Accepts optional `--region` parameter (defaults to us-east-1)
+- [x] Script at `scripts/ecr-login.sh`
+- [x] Uses `aws ecr get-login-password --region us-east-1` and pipes to `docker login {account}.dkr.ecr.us-east-1.amazonaws.com`
+- [x] Works on macOS and Linux — portable `#!/usr/bin/env bash`, no bash-4+-only features
+- [x] Accepts optional `--region` parameter (defaults to us-east-1)
 
 ---
 
@@ -2246,6 +2250,7 @@ Manage EKS managed add-ons (CoreDNS, kube-proxy, vpc-cni, **EBS CSI Driver**) vi
 ### PETPLAT-85: Build and push Docker images to ECR (initial)
 
 **Type:** Story
+**Status:** In Review — 5 of 8 images successfully built and pushed; remaining 3 blocked by a recurring network stall during push (see below), not a code/config issue
 **Priority:** P0
 **Epic:** E-4 Container Registry (ECR)
 **Story Points:** 3
@@ -2255,16 +2260,24 @@ Manage EKS managed add-ons (CoreDNS, kube-proxy, vpc-cni, **EBS CSI Driver**) vi
 **Description:**
 Perform the first-time manual build of all 8 Docker images from the application repo and push them to ECR. This is needed before K8s manifests can be deployed (images must exist in ECR). CI will handle subsequent builds.
 
+**Deviation from the original plan (explicit instruction):** does NOT use `./mvnw clean install -P buildDocker` — that Maven profile shells out to plain `docker build --platform ...`, which can't reliably cross-compile to `linux/arm64` on an x86 host. Instead, `scripts/build-push-images.sh` runs a containerized Maven build (`maven:3.9-eclipse-temurin-17`, no local JDK needed) to build JARs, then `docker buildx build --platform linux/arm64 --push` per service to build and push ARM64 images directly.
+
+**Execution note (2026-07-19):** Ran `scripts/build-push-images.sh --tag v1.0.0 --env dev`. Maven build succeeded for all 8 modules. `config-server`, `discovery-server`, `api-gateway`, and `customers-service` built and pushed successfully — verified present in ECR via `aws ecr describe-images`. The remaining 4 (`visits-service`, `vets-service`, `genai-service`, `admin-server`) repeatedly stalled mid-push with either a `use of closed network connection` error or a silent hang, confirmed via genuine blocking waits (not a polling artifact). Narrowed the cause across ~8 retry attempts: small layers push successfully every time; the stall is specific to uploading the large (~144MB) shared base layer. Neither recreating the buildx builder, disabling provenance/attestation, nor switching from `docker buildx build --push` to a local `--load` followed by classic `docker push` (a different code path) fixed it — both mechanisms stall on the same large-blob upload. This points to an environment-level limitation on sustained large single-blob HTTPS uploads (matches the connection-drop pattern also seen during the EKS cluster applies, PETPLAT-16), not a script or Terraform defect.
+
+**Follow-up retry round (same day):** Attempted each of the 4 remaining services individually (fresh builder recreated before each attempt) — `visits-service` failed 4 times, `vets-service` and `genai-service` failed twice each, `admin-server` failed once; all stalled at the identical point on the same large layer initially. This confirms the limitation is persistent and not resolved by waiting a few minutes.
+
+**Second follow-up round (same day):** Retried `visits-service`, `vets-service`, `genai-service`, and `admin-server` again, one at a time with a fresh builder each. `admin-server` succeeded this time (5th attempt overall) — confirmed in ECR. `visits-service` and `vets-service` each stalled twice more; `genai-service` stalled once more. So the limitation is intermittent rather than a hard block — persistence eventually gets images through, just unpredictably. To finish the remaining 3: keep retrying `scripts/build-push-images.sh --tag v1.0.0 --skip-build` (JARs already built and on disk), or run it from a network without this limitation — the script is idempotent and dev's `MUTABLE` tag safely re-pushes already-completed services too.
+
 **Technical Spec:** [Docker Build](./technical-spec.md#docker-build), [ECR Container Registry](./technical-spec.md#ecr-container-registry)
 
 **Acceptance Criteria:**
-- [ ] Application repo cloned locally
-- [ ] `./mvnw clean install -P buildDocker` succeeds (all 8 images built)
-- [ ] ECR login successful: `aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {account}.dkr.ecr.us-east-1.amazonaws.com`
-- [ ] All 8 images tagged with initial version (e.g., `v1.0.0` or commit SHA)
-- [ ] All 8 images pushed to ECR (`{account}.dkr.ecr.us-east-1.amazonaws.com/petclinic-dev/{service}:{tag}`)
-- [ ] Verified: images visible in AWS ECR Console
-- [ ] Documented: the build and push commands for reference
+- [x] Application repo cloned locally (already present as a sibling directory)
+- [ ] ~~`./mvnw clean install -P buildDocker` succeeds~~ — superseded, see deviation note above; ran via `scripts/build-push-images.sh` (containerized Maven build) instead, succeeded for all 8 modules
+- [x] ECR login successful: `aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {account}.dkr.ecr.us-east-1.amazonaws.com` — implemented as `scripts/ecr-login.sh`, invoked automatically by the build/push script, verified working
+- [x] All 8 images tagged with initial version (e.g., `v1.0.0` or commit SHA) — tag applied consistently via `--tag v1.0.0`
+- [ ] All 8 images pushed to ECR (`{account}.dkr.ecr.us-east-1.amazonaws.com/petclinic-dev/{service}:{tag}`) — 5/8 done (config-server, discovery-server, api-gateway, customers-service, admin-server); 3 remain (visits-service, vets-service, genai-service), blocked by an intermittent large-layer upload limitation, see execution notes
+- [ ] Verified: images visible in AWS ECR Console — verified for 5/8 via `aws ecr describe-images` (not the Console UI itself, but equivalent); remaining 3 pending push
+- [x] Documented: the build and push commands for reference — `docs/runbook.md`, "Build and push service images to ECR"
 
 ---
 

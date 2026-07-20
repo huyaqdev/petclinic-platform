@@ -21,7 +21,25 @@
       "mcp__terraform-mcp-server__get_provider_details",
       "mcp__aws-knowledge-mcp__aws___search_documentation",
       "Bash(terraform validate *)",
-      "Bash(terraform plan *)"
+      "Bash(terraform plan *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(terraform apply *)",
+      "Bash(aws eks describe-cluster *)",
+      "Bash(terraform show *)",
+      "Bash(terraform init *)",
+      "Bash(terraform fmt *)",
+      "Bash(aws ecr describe-repositories *)",
+      "Read(//c/Program Files \\\\\\(x86\\\\\\)/**)",
+      "Read(//c/Users/tx/**)",
+      "Bash(choco list *)",
+      "Bash(scoop list *)",
+      "Bash(./scripts/build-push-images.sh --tag v1.0.0 --env dev)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code} in %{time_total}s\\\\n\" --max-time 10 https://541253215789.dkr.ecr.us-east-1.amazonaws.com/v2/)",
+      "Bash(docker buildx *)",
+      "Bash(./scripts/build-push-images.sh --tag v1.0.0 --env dev --skip-build)",
+      "Bash(aws ecr describe-images *)",
+      "Bash(docker push *)"
     ]
   },
   "enabledMcpjsonServers": [
