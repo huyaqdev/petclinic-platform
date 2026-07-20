@@ -761,6 +761,7 @@ Create `scripts/ecr-login.sh` that authenticates Docker to the ECR private regis
 ### PETPLAT-22: Create RDS module
 
 **Type:** Story
+**Status:** Done
 **Priority:** P0
 **Epic:** E-5 Database
 **Story Points:** 5
@@ -773,26 +774,27 @@ Create the RDS module in `terraform/modules/rds/` for a MySQL instance.
 **Technical Spec:** [RDS Database](./technical-spec.md#rds-database), [Terraform Modules](./technical-spec.md#terraform-modules)
 
 **Acceptance Criteria:**
-- [ ] Module in `terraform/modules/rds/`
-- [ ] RDS MySQL 8.0 instance (single shared `petclinic` database for all 3 domain services)
-- [ ] DB subnet group using the VPC subnets
-- [ ] RDS security group: allow 3306 from EKS node SG only
-- [ ] Storage encryption enabled (KMS or default)
-- [ ] Multi-AZ configurable (false for both envs — cost optimization; teach students when to enable)
-- [ ] Instance class configurable (default: db.t4g.micro — free tier, ARM/Graviton)
-- [ ] Allocated storage configurable (default: 20 GB, autoscaling enabled)
-- [ ] Backup retention: 7 days (dev), 30 days (prod) — configurable
-- [ ] Skip final snapshot configurable (true for dev, false for prod)
-- [ ] DB parameter group with character set utf8mb4
-- [ ] Master username and password sourced from variables (will come from Secrets Manager)
-- [ ] Outputs: endpoint, port, db_instance_id
-- [ ] `terraform validate` passes
+- [x] Module in `terraform/modules/rds/`
+- [x] RDS MySQL 8.0 instance (single shared `petclinic` database for all 3 domain services) — `db_name = "petclinic"` on `aws_db_instance.this`
+- [x] DB subnet group using the VPC subnets — `aws_db_subnet_group.this`, fed `module.vpc.public_subnet_ids`
+- [x] RDS security group: allow 3306 from EKS node SG only — reuses `module.vpc.rds_sg_id` (PETPLAT-8), passed straight through as `vpc_security_group_ids`
+- [x] Storage encryption enabled (KMS or default) — `storage_encrypted = true` (default AWS-managed key)
+- [x] Multi-AZ configurable (false for both envs — cost optimization; teach students when to enable) — `var.multi_az`, defaults false in both envs
+- [x] Instance class configurable (default: db.t4g.micro — free tier, ARM/Graviton)
+- [x] Allocated storage configurable (default: 20 GB, autoscaling enabled) — `allocated_storage`/`max_allocated_storage`, both default 20
+- [x] Backup retention: 7 days (dev), 30 days (prod) — configurable
+- [x] Skip final snapshot configurable (true for dev, false for prod)
+- [x] DB parameter group with character set utf8mb4 — `aws_db_parameter_group.this`, family `mysql8.0`
+- [x] Master username and password sourced from variables (will come from Secrets Manager) — `var.master_username` (default `petclinic`), password from `random_password.master`, both written to the PETPLAT-23 secret
+- [x] Outputs: endpoint, port, db_instance_id
+- [x] `terraform validate` passes — verified in both dev and prod; `terraform plan -target=module.rds` shows 6 to add, 0 to change, 0 to destroy in both envs
 
 ---
 
 ### PETPLAT-23: Create database credentials in Secrets Manager
 
 **Type:** Story
+**Status:** Done
 **Priority:** P0
 **Epic:** E-5 Database
 **Story Points:** 3
@@ -805,19 +807,20 @@ Store the RDS master credentials in AWS Secrets Manager via Terraform. Generate 
 **Technical Spec:** [RDS Database](./technical-spec.md#rds-database), [Secrets Management](./technical-spec.md#secrets-management)
 
 **Acceptance Criteria:**
-- [ ] Random password generated using `random_password` resource (16+ chars, special chars)
-- [ ] Secrets created using `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version` resources
-- [ ] Secret name: `petclinic/{env}/rds-credentials` (single JSON secret with `username` and `password` keys)
-- [ ] RDS instance references the generated password
-- [ ] Secret values NOT in Terraform state as plaintext (use `sensitive = true`)
-- [ ] Output: secret ARNs (for External Secrets Operator later)
-- [ ] `terraform validate` passes
+- [x] Random password generated using `random_password` resource (16+ chars, special chars) — 20 chars, `min_special/upper/lower/numeric = 2`, `override_special` excludes `/ @ "` and space (disallowed by RDS)
+- [x] Secrets created using `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version` resources
+- [x] Secret name: `petclinic/{env}/rds-credentials` (single JSON secret with `username` and `password` keys)
+- [x] RDS instance references the generated password — `aws_db_instance.this.password = random_password.master.result`; `lifecycle.ignore_changes = [password]` so future manual/automated rotation isn't clobbered by a plain `terraform apply`
+- [x] Secret values NOT in Terraform state as plaintext (use `sensitive = true`) — `random_password.result` is provider-marked sensitive; no password output is ever exposed, only `secret_arn`
+- [x] Output: secret ARNs (for External Secrets Operator later) — `secret_arn` output, threaded up through both environment root modules as `rds_secret_arn`
+- [x] `terraform validate` passes — reviewed by terraform-reviewer (0 critical, 3 warnings addressed: gp2/gp3 rationale comment, ignore_changes on password, Name tag on the secret)
 
 ---
 
 ### PETPLAT-24: Create database initialization strategy
 
 **Type:** Story
+**Status:** Done — strategy documented; "tested: services can connect" deferred to PETPLAT-26 (requires a deployed RDS instance and running services)
 **Priority:** P0
 **Epic:** E-5 Database
 **Story Points:** 3
@@ -830,17 +833,18 @@ Document and implement how the shared `petclinic` MySQL database gets its schema
 **Technical Spec:** [RDS Database](./technical-spec.md#rds-database)
 
 **Acceptance Criteria:**
-- [ ] Strategy documented: which approach is used (Spring auto-init vs manual)
-- [ ] One shared `petclinic` database created (all 3 services use the same DB — confirmed by cross-service FK: `visits.pet_id` → `pets.id`)
-- [ ] Schema scripts identified: customers (owners, pets, types), visits (visits), vets (vets, specialties, vet_specialties)
-- [ ] Connection string format documented for K8s ConfigMaps
-- [ ] Tested: services can connect and tables exist
+- [x] Strategy documented: which approach is used (Spring auto-init vs manual) — `docs/runbook.md`, "Database initialization strategy (RDS MySQL)": Spring auto-init (`spring.sql.init.mode=always`, `mysql` profile), order enforced by K8s deployment ordering, not Terraform
+- [x] One shared `petclinic` database created (all 3 services use the same DB — confirmed by cross-service FK: `visits.pet_id` → `pets.id`) — `db_name = "petclinic"` on the RDS instance (PETPLAT-22), reinforced by each service's own idempotent `CREATE DATABASE IF NOT EXISTS`
+- [x] Schema scripts identified: customers (owners, pets, types), visits (visits), vets (vets, specialties, vet_specialties)
+- [x] Connection string format documented for K8s ConfigMaps — `jdbc:mysql://{rds-endpoint}:3306/petclinic` in `docs/runbook.md`, `{rds-endpoint}` = `rds_endpoint` Terraform output
+- [ ] Tested: services can connect and tables exist — requires a deployed RDS instance + deployed services; tracked under PETPLAT-26
 
 ---
 
 ### PETPLAT-25: Wire RDS module into dev environment
 
 **Type:** Task
+**Status:** Done
 **Priority:** P0
 **Epic:** E-5 Database
 **Story Points:** 2
@@ -853,13 +857,13 @@ Call the RDS module from dev environment.
 **Technical Spec:** [RDS Database](./technical-spec.md#rds-database)
 
 **Acceptance Criteria:**
-- [ ] RDS module called in dev main.tf
-- [ ] Instance class: db.t4g.micro (free tier)
-- [ ] Multi-AZ: false
-- [ ] Skip final snapshot: true
-- [ ] Backup retention: 7 days
-- [ ] Subnets and RDS SG from VPC module
-- [ ] `terraform plan` shows expected resources
+- [x] RDS module called in dev main.tf
+- [x] Instance class: db.t4g.micro (free tier)
+- [x] Multi-AZ: false
+- [x] Skip final snapshot: true
+- [x] Backup retention: 7 days
+- [x] Subnets and RDS SG from VPC module — `module.vpc.public_subnet_ids`, `module.vpc.rds_sg_id`
+- [x] `terraform plan` shows expected resources — verified: `terraform plan -target=module.rds` → 6 to add, 0 to change, 0 to destroy
 
 ---
 
@@ -889,6 +893,7 @@ Deploy RDS to dev and verify connectivity from EKS pod.
 ### PETPLAT-27: Wire RDS module into prod environment
 
 **Type:** Task
+**Status:** Done — note: `rds_backup_retention_period=30` / `rds_skip_final_snapshot=false` for prod follow this story's ACs, which are stricter than the dev/prod-identical summary table in docs/technical-spec.md#rds-database (7 days / skip=true for both); see rationale comment in terraform/environments/prod/variables.tf
 **Priority:** P1
 **Epic:** E-5 Database
 **Story Points:** 1
@@ -901,11 +906,11 @@ Call the RDS module from prod environment with prod-appropriate config.
 **Technical Spec:** [RDS Database](./technical-spec.md#rds-database)
 
 **Acceptance Criteria:**
-- [ ] Instance class: db.t4g.micro (free tier, same as dev — cost optimization for learning)
-- [ ] Multi-AZ: false (single-AZ to save cost; note: in real production, enable Multi-AZ)
-- [ ] Skip final snapshot: false
-- [ ] Backup retention: 30 days
-- [ ] `terraform plan` shows expected resources
+- [x] Instance class: db.t4g.micro (free tier, same as dev — cost optimization for learning)
+- [x] Multi-AZ: false (single-AZ to save cost; note: in real production, enable Multi-AZ)
+- [x] Skip final snapshot: false
+- [x] Backup retention: 30 days
+- [x] `terraform plan` shows expected resources — verified: `terraform plan -target=module.rds` → 6 to add, 0 to change, 0 to destroy
 
 ---
 

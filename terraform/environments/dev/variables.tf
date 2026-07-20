@@ -45,3 +45,45 @@ variable "ecr_image_tag_mutability" {
   type        = string
   default     = "MUTABLE"
 }
+
+variable "rds_instance_class" {
+  description = "RDS instance class for dev"
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "rds_allocated_storage" {
+  description = "Initial RDS allocated storage for dev, in GB"
+  type        = number
+  default     = 20
+}
+
+variable "rds_max_allocated_storage" {
+  description = "Maximum RDS autoscaled storage for dev, in GB"
+  type        = number
+  default     = 20
+}
+
+variable "rds_multi_az" {
+  description = "Multi-AZ deployment for dev RDS (false — cost optimization for learning)"
+  type        = bool
+  default     = false
+}
+
+variable "rds_backup_retention_period" {
+  description = "RDS automated backup retention for dev, in days"
+  type        = number
+  default     = 7
+}
+
+variable "rds_skip_final_snapshot" {
+  description = "Skip final snapshot on dev RDS destroy"
+  type        = bool
+  default     = true
+}
+
+variable "rds_deletion_protection" {
+  description = "Deletion protection for dev RDS"
+  type        = bool
+  default     = false
+}

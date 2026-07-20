@@ -111,3 +111,41 @@
 
 **Rollback:**
 - Nothing to roll back on the registry side — pushing a new tag never overwrites an existing one (dev is `MUTABLE`, but tags used here should still be unique per push; prod is `IMMUTABLE` and will reject a re-push of the same tag outright). To remove a bad image, delete it from the ECR Console or `aws ecr batch-delete-image`.
+
+---
+
+### Procedure: Database initialization strategy (RDS MySQL)
+
+**When:** Reference this before first deploying `customers-service`, `visits-service`, or `vets-service` to an environment, or when debugging schema/connectivity issues.
+**Who:** Whoever deploys the database-backed services.
+**Time:** N/A — reference material, not a one-off action.
+
+**Context (PETPLAT-24):** All three database-backed services share a single `petclinic` MySQL database on one RDS instance (`terraform/modules/rds/`) — confirmed by the cross-service foreign key `visits.pet_id -> pets.id`. There is no separate Terraform-driven schema-init step. Each service ships its own `schema.sql` under `src/main/resources/db/mysql/` in the app repo and self-initializes via Spring Boot with `spring.sql.init.mode=always` and the `mysql` Spring profile active. The RDS instance itself creates the empty `petclinic` database at provisioning time (`db_name = "petclinic"` on `aws_db_instance.this`); each service's schema script also carries `CREATE DATABASE IF NOT EXISTS petclinic; USE petclinic;`, which is idempotent against that.
+
+**Schema ownership (7 tables, 3 services):**
+
+| Service | Tables | Foreign keys |
+|---|---|---|
+| `customers-service` | `types`, `owners`, `pets` | none outbound |
+| `vets-service` | `vets`, `specialties`, `vet_specialties` | none outbound (independent) |
+| `visits-service` | `visits` | `visits.pet_id -> pets.id` |
+
+**Init order — enforced by K8s deployment order, not by Terraform or Spring:**
+1. `customers-service` first — creates `types`, `owners`, `pets`.
+2. `vets-service` — independent, can run any time after `customers-service` or in parallel.
+3. `visits-service` last — its schema has a hard FK dependency on `pets`, which only exists once `customers-service` has initialized.
+
+This ordering is the same constraint documented for service startup generally (Config Server → Discovery Server → everything else); `customers-service` before `visits-service` is the one additional constraint specific to the database layer. Enforce it with K8s init containers or deployment ordering when wiring the Helm charts / ArgoCD Applications (E-8/E-16/E-17) — it is not enforced by this module.
+
+**Connection string format** (for K8s ConfigMaps / Spring `SPRING_DATASOURCE_URL`):
+```
+jdbc:mysql://{rds-endpoint}:3306/petclinic
+```
+`{rds-endpoint}` is the `rds_endpoint` Terraform output (or `module.rds.endpoint`) for the target environment; username/password come from the `petclinic/{env}/rds-credentials` Secrets Manager secret (see `rds_secret_arn` output), synced into K8s via External Secrets Operator (E-7).
+
+**Verify:**
+- `terraform apply` on the `rds` module succeeds and the instance status is `available`.
+- From a debug pod on the cluster: `kubectl run mysql-client --rm -it --image=mysql:8.0 -- mysql -h <rds_endpoint> -u petclinic -p petclinic` connects and `SHOW TABLES;` (after the services have started at least once) lists all 7 tables.
+
+**Rollback:**
+- Not applicable — this is a documentation/ordering convention, not an infrastructure resource. To reset schemas, drop and let Spring re-initialize on next pod restart (dev only; never on prod data).

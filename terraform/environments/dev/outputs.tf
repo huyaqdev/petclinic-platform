@@ -95,3 +95,23 @@ output "ecr_image_tag_mutability" {
   description = "Tag mutability applied to all dev ECR repositories"
   value       = module.ecr.image_tag_mutability
 }
+
+output "rds_endpoint" {
+  description = "RDS endpoint hostname"
+  value       = module.rds.endpoint
+}
+
+output "rds_port" {
+  description = "RDS port"
+  value       = module.rds.port
+}
+
+output "rds_instance_id" {
+  description = "RDS instance ID"
+  value       = module.rds.db_instance_id
+}
+
+output "rds_secret_arn" {
+  description = "Secrets Manager secret ARN for RDS credentials"
+  value       = module.rds.secret_arn
+}
