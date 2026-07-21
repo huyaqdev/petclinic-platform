@@ -14,8 +14,13 @@ variable "environment" {
   }
 }
 
-variable "domain_name" {
-  description = "Root domain name for the Route 53 hosted zone (e.g. \"example.com\"). Must be a domain you actually control — delegate its registrar NS records to this zone's name_servers output, or ACM DNS validation will never complete."
+variable "oidc_provider_arn" {
+  description = "EKS cluster OIDC provider ARN (from the eks module), used in the IRSA trust policy"
+  type        = string
+}
+
+variable "oidc_provider_url" {
+  description = "EKS cluster OIDC provider issuer URL (from the eks module), used in the IRSA trust policy"
   type        = string
 }
 

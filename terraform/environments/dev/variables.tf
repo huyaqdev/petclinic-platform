@@ -87,3 +87,15 @@ variable "rds_deletion_protection" {
   type        = bool
   default     = false
 }
+
+variable "domain_name" {
+  description = "Root domain name for the Route 53 hosted zone (e.g. \"example.com\"). Placeholder default — override in terraform.tfvars with a domain you actually own before applying; terraform validate does not require a real value."
+  type        = string
+  default     = "example.com"
+}
+
+variable "create_app_dns_record" {
+  description = "Whether to create the petclinic-dev.{domain_name} alias record pointing at the Ingress-managed ALB. Leave false until the AWS Load Balancer Controller and Ingress have been applied and the ALB exists (see terraform/environments/dev/dns.tf), otherwise the aws_lb data lookup fails."
+  type        = bool
+  default     = false
+}

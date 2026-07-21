@@ -48,3 +48,24 @@ module "rds" {
   skip_final_snapshot     = var.rds_skip_final_snapshot
   deletion_protection     = var.rds_deletion_protection
 }
+
+# Hosted zone + ACM cert (PETPLAT-28/32). Only wired into dev for now — the
+# spec's Route 53 table has both the dev and prod records living in the same
+# zone, and there is no "wire DNS module into prod" story yet.
+module "dns" {
+  source = "../../modules/dns"
+
+  project     = var.project
+  environment = var.environment
+  domain_name = var.domain_name
+}
+
+module "lb_controller" {
+  source = "../../modules/lb-controller"
+
+  project     = var.project
+  environment = var.environment
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+}

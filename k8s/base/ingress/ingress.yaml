@@ -1,0 +1,40 @@
+# PETPLAT-30 — routes external HTTPS traffic to the API Gateway. Requires:
+#   - the alb IngressClass (ingressclass.yaml in this directory)
+#   - the AWS Load Balancer Controller running (scripts/install-lb-controller.sh)
+#   - a validated ACM certificate ARN (terraform output -raw dns_certificate_arn
+#     from terraform/environments/dev — see PETPLAT-28) substituted below
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway
+  namespace: petclinic-dev
+  labels:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/part-of: petclinic
+    app.kubernetes.io/managed-by: kubectl
+    app.kubernetes.io/component: infrastructure
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    # Deterministic name so Terraform can look the ALB up by name afterwards
+    # (terraform/environments/dev/dns.tf, PETPLAT-31).
+    alb.ingress.kubernetes.io/load-balancer-name: petclinic-dev-alb
+    # Replace with the real ARN: `terraform output -raw dns_certificate_arn`
+    # from terraform/environments/dev.
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERTIFICATE_ID"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
+    alb.ingress.kubernetes.io/healthcheck-port: "8080"
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080

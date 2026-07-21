@@ -115,3 +115,23 @@ output "rds_secret_arn" {
   description = "Secrets Manager secret ARN for RDS credentials"
   value       = module.rds.secret_arn
 }
+
+output "dns_zone_id" {
+  description = "Route 53 hosted zone ID"
+  value       = module.dns.zone_id
+}
+
+output "dns_name_servers" {
+  description = "Route 53 name servers — delegate the domain's registrar NS records to these"
+  value       = module.dns.name_servers
+}
+
+output "dns_certificate_arn" {
+  description = "Validated ACM certificate ARN — set as the certificate-arn annotation on k8s/base/ingress/ingress.yaml"
+  value       = module.dns.certificate_arn
+}
+
+output "lb_controller_role_arn" {
+  description = "IRSA role ARN for the aws-load-balancer-controller service account — consumed by scripts/install-lb-controller.sh"
+  value       = module.lb_controller.role_arn
+}

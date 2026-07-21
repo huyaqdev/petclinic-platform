@@ -115,3 +115,8 @@ output "rds_secret_arn" {
   description = "Secrets Manager secret ARN for RDS credentials"
   value       = module.rds.secret_arn
 }
+
+output "lb_controller_role_arn" {
+  description = "IRSA role ARN for the aws-load-balancer-controller service account — consumed by scripts/install-lb-controller.sh"
+  value       = module.lb_controller.role_arn
+}

@@ -48,3 +48,17 @@ module "rds" {
   skip_final_snapshot     = var.rds_skip_final_snapshot
   deletion_protection     = var.rds_deletion_protection
 }
+
+# LB controller IRSA role only — the prod cluster needs its own controller
+# install (PETPLAT-29), but the Route 53 zone/cert (PETPLAT-28) and the ALB
+# alias record (PETPLAT-31) are only wired into dev per the current backlog
+# (no "wire DNS module into prod" story yet).
+module "lb_controller" {
+  source = "../../modules/lb-controller"
+
+  project     = var.project
+  environment = var.environment
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+}
